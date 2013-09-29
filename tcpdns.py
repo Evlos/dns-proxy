@@ -10,7 +10,6 @@
 # 2013-06-24  add lru cache support
 # 2013-08-14  add option to disable cache
 
-
 #  8.8.8.8        google
 #  8.8.4.4        google
 #  156.154.70.1   Dnsadvantage
@@ -19,6 +18,8 @@
 #  208.67.220.220 OpenDNS
 #  198.153.192.1  Norton
 #  198.153.194.1  Norton
+
+# modified by Evlos (Misaka9982.com)
 
 import os, sys
 import socket
@@ -38,18 +39,19 @@ except:
 else:
     monkey.patch_all()
 
-DHOSTS = ['8.8.8.8',
-         '8.8.4.4',
-         '156.154.70.1',
-         '156.154.71.1',
-         '208.67.222.222',
-         '208.67.220.220',
-         #'198.153.192.1',
-         #'198.153.194.1',
-         '74.207.247.4',
-         '209.244.0.3',
-         '8.26.56.26'
-         ]
+DHOSTS = [
+    '8.8.8.8',
+    '8.8.4.4',
+    '156.154.70.1',
+    '156.154.71.1',
+    '208.67.222.222',
+    '208.67.220.220',
+    #'198.153.192.1',
+    #'198.153.194.1',
+    '74.207.247.4',
+    '209.244.0.3',
+    '8.26.56.26'
+]
 
 DPORT = 53
 TIMEOUT = 20
@@ -105,7 +107,7 @@ def QueryDNS(server, port, querydata):
         s.send(sendbuf)
         data = s.recv(2048)
     except Exception, e:
-        print '[ERROR] QueryDNS: %s' %  e.message
+        print 'ERROR | QueryDNS: %s' %  e.message
     finally:
         if s: s.close()
         return data
@@ -119,7 +121,7 @@ def transfer(querydata, addr, server):
     domain = bytetodomain(querydata[12:-4])
     qtype = struct.unpack('!h', querydata[-4:-2])[0]
 
-    print 'domain:%s, qtype:%x, thread:%d' % \
+    print 'ToClient | domain: %s, qtype: %x, thread: %d' % \
          (domain, qtype, threading.activeCount())
     sys.stdout.flush()
 
@@ -131,6 +133,7 @@ def transfer(querydata, addr, server):
         try:
             response = LRUCACHE[key]
             server.sendto(t_id + response[4:], addr)
+            print 'LRUCache | Hit %s' % key
         except KeyError:
             pass
 
@@ -139,6 +142,7 @@ def transfer(querydata, addr, server):
 
     for i in range(len(DHOSTS)):
         DHOST = DHOSTS[i]
+        print 'QueryDNS | ip: %s' % DHOST
         response = QueryDNS(DHOST, DPORT, querydata)
 
         if response is None:
@@ -152,7 +156,7 @@ def transfer(querydata, addr, server):
         break
 
     if response is None:
-        print "[ERROR] Tried many times and failed to resolve %s" % domain
+        print "ERROR | Tried many times and failed to resolve %s" % domain
 
 class ThreadedUDPServer(SocketServer.ThreadingMixIn, SocketServer.UDPServer):
     def __init__(self, s, t):
@@ -191,4 +195,3 @@ if __name__ == "__main__":
 
     server.serve_forever()
     server.shutdown()
-
