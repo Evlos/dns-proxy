@@ -10,6 +10,8 @@
 # 2013-06-24  add lru cache support
 # 2013-08-14  add option to disable cache
 
+#  199.91.73.222  v2ex
+#  178.79.131.110 v2ex
 #  8.8.8.8        google
 #  8.8.4.4        google
 #  156.154.70.1   Dnsadvantage
@@ -40,6 +42,8 @@ else:
     monkey.patch_all()
 
 DHOSTS = [
+    '199.91.73.222',
+    '178.79.131.110',
     '8.8.8.8',
     '8.8.4.4',
     '156.154.70.1',
@@ -133,7 +137,7 @@ def transfer(querydata, addr, server):
         try:
             response = LRUCACHE[key]
             server.sendto(t_id + response[4:], addr)
-            print 'LRUCache | Hit %s' % key
+            print 'LRUCache | Hit key: %s' % key
         except KeyError:
             pass
 
